@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=pg_iceberg
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  minio:
+    image: quay.io/minio/aistor/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001" --license /minio.license
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio_password
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+      - ./docker/minio/minio.license:/minio.license
+
+  spark-master:
+    build: 
+      context: ./docker/spark
+    container_name: spark-master
+    # start spark as master
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+    ports:
+      - "8080:8080" # master web ui
+      - "7077:7077" # worker-master connection
+    volumes:
+      - spark-data:/opt/spark/data
+      - ./src/spark_jobs:/opt/spark/jobs
+
+  spark-worker:
+    build: 
+      context: ./docker/spark
+    container_name: spark-worker
+    # start spark as worker
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    depends_on:
+      - spark-master
+    ports:
+      - "8081:8081" # worker web ui
+    volumes:
+      - spark-data:/opt/spark/data
+      - ./src/spark_jobs:/opt/spark/jobs
+
+volumes:
+  pg-data:
+  minio-data:
+  spark-data:
