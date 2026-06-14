@@ -25,10 +25,19 @@ The goal is to build an automated data governance pipeline on a Data Lakehouse. 
 ## Requirements
 
 - Docker
-    
 - Docker Compose
-    
 - [Minio Client](https://docs.min.io/aistor/reference/cli/?tab=mc-alias-examples-aistor-server)
+### Spark Dependencies
+
+The Spark image requires the following JVM dependencies. Downloaded from Maven Central Repository. The version of each should be as close as possible to avoid version-related errors.
+
+- `aws-java-sdk-bundle-1.12.797`
+- `hadoop-aws-3.3.4`
+- `iceberg-spark-runtime-3.5_2.12-1.8.1`
+- `postgresql-42.7.11`
+
+Once the JAR files are downloaded. Place them under [`./docker/spark/jars`](docker/spark/jars) directory. Where docker will attach them into the created image
+
 ## Dev Environment
 
 This project is developed entirely on Docker, from the project root, run this command to start all services 
