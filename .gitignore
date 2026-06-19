@@ -1,5 +1,6 @@
 # secrets
 *.license
+*.env
 
 # environments
 *venv

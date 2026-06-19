@@ -46,6 +46,11 @@ This project is developed entirely on Docker, from the project root, run this co
 docker compose up -d
 ```
 
+It is also required that environment variables are available, create an `.env` file from [`.env.example`](.env.example), replace information as needed, and place it at the project root
+
+```bash
+cp .env.example .env
+```
 ## Available Services and Commands
 
 ### Spark Master

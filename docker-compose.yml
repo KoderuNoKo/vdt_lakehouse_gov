@@ -3,11 +3,11 @@ services:
     image: postgres:16
     container_name: postgres
     environment:
-      - POSTGRES_DB=pg_iceberg
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     ports:
-      - "5433:5432"
+      - "${DB_PORT_LOCAL}:5432"
     volumes:
       - pg-data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -17,17 +17,17 @@ services:
     container_name: minio
     command: server /data --console-address ":9001" --license /minio.license
     environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio_password
+      MINIO_ROOT_USER: ${LH_USER}
+      MINIO_ROOT_PASSWORD: ${LH_PASSWORD}
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "${LH_PORT_LOCAL_API}:9000"
+      - "${LH_PORT_LOCAL_WEB}:9001"
     volumes:
       - minio-data:/data
       - ./docker/minio/minio.license:/minio.license
 
   spark-master:
-    build: 
+    build:
       context: ./docker/spark
     container_name: spark-master
     # start spark as master
@@ -40,7 +40,7 @@ services:
       - ./src/spark_jobs:/opt/spark/jobs
 
   spark-worker:
-    build: 
+    build:
       context: ./docker/spark
     container_name: spark-worker
     # start spark as worker

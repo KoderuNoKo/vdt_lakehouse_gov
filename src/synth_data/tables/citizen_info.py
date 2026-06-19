@@ -8,31 +8,12 @@ Purpose:
     - Baseline evaluation
 """
 
-import os
 import random
 
 import psycopg2
 
 from synth_data.base import TableGenerator
-
-# ------------------------------------------------------------------ #
-# Default DB connection for the Vietnamese provinces/wards dataset.   #
-# Override with env vars if your setup differs.                       #
-# ------------------------------------------------------------------ #
-_DB_CONFIG = {
-    "host": os.getenv("PG_HOST", "localhost"),
-    "port": int(os.getenv("PG_PORT", "5433")),
-    "dbname": os.getenv("PG_DB", "pg_iceberg"),
-    "user": os.getenv("PG_USER", "postgres"),
-    "password": os.getenv("PG_PASSWORD", "postgres"),
-}
-
-_ADDRESS_QUERY = """
-    SELECT w.full_name  AS ward_name,
-           p.full_name  AS province_name
-      FROM public.wards w
-      JOIN public.provinces p ON w.province_code = p.code
-"""
+from synth_data.tables.settings import _DB_CONFIG
 
 
 class CitizenInfoGenerator(TableGenerator):
@@ -78,14 +59,20 @@ class CitizenInfoGenerator(TableGenerator):
     # ------------------------------------------------------------------ #
     @classmethod
     def _load_address_pool(cls) -> list[tuple[str, str]]:
-        """Fetch all ward–province pairs from the Postgres DB (once)."""
+        """Fetch all ward-province pairs from the Postgres DB (once)."""
+        query = """
+            SELECT w.full_name  AS ward_name,
+            p.full_name  AS province_name
+            FROM public.wards w
+            JOIN public.provinces p ON w.province_code = p.code
+        """
         if cls._address_pool is not None:
             return cls._address_pool
 
         conn = psycopg2.connect(**_DB_CONFIG)
         try:
             with conn.cursor() as cur:
-                cur.execute(_ADDRESS_QUERY)
+                cur.execute(query)
                 cls._address_pool = cur.fetchall()
         finally:
             conn.close()
