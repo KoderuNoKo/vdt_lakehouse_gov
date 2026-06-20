@@ -1,4 +1,21 @@
+DROP TABLE IF EXISTS tx_types CASCADE;
 DROP TABLE IF EXISTS tx_message_templates CASCADE;
+
+-- =========================================================================
+-- TABLE: Transaction Types (Loại giao dịch)
+-- =========================================================================
+CREATE TABLE tx_types (
+    id SERIAL PRIMARY KEY,
+    type_code VARCHAR(50) NOT NULL
+);
+
+INSERT INTO tx_types (type_code) VALUES
+('TRANSFER'),
+('PAYMENT'),
+('SALARY'),
+('DEPOSIT'),
+('WITHDRAWAL');
+
 
 CREATE TABLE tx_message_templates (
     id SERIAL PRIMARY KEY,

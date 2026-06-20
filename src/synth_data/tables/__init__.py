@@ -10,6 +10,7 @@ To add a new table:
 from synth_data.tables.citizen_info import CitizenInfoGenerator
 from synth_data.tables.administrative_record import AdministrativeRecordGenerator
 from synth_data.tables.transaction_log import TransactionLogGenerator
+from synth_data.tables.hr_employee_ambiguous import HrEmployeeAmbiguousGenerator
 
 # Maps table_name -> generator class.
 # Add new entries as you create more tables.
@@ -17,6 +18,7 @@ REGISTRY: dict[str, type] = {
     CitizenInfoGenerator.table_name: CitizenInfoGenerator,
     AdministrativeRecordGenerator.table_name: AdministrativeRecordGenerator,
     TransactionLogGenerator.table_name: TransactionLogGenerator,
+    HrEmployeeAmbiguousGenerator.table_name: HrEmployeeAmbiguousGenerator,
 }
 
 __all__ = [
@@ -24,4 +26,5 @@ __all__ = [
     "CitizenInfoGenerator",
     "AdministrativeRecordGenerator",
     "TransactionLogGenerator",
+    "HrEmployeeAmbiguousGenerator",
 ]

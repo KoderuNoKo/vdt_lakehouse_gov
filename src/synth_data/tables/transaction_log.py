@@ -24,8 +24,6 @@ from synth_data.tables.settings import _DB_CONFIG
 # Probability that fraud_notes is NOT null (< 1%).
 _FRAUD_NOTE_PROBABILITY = 0.008
 
-_TX_TYPES = ["TRANSFER", "PAYMENT", "SALARY", "DEPOSIT", "WITHDRAWAL"]
-
 
 class TransactionLogGenerator(TableGenerator):
     """Generates synthetic banking transaction log records.
@@ -53,6 +51,7 @@ class TransactionLogGenerator(TableGenerator):
     ]
 
     # Cached DB data — loaded once across all instances.
+    _tx_types_pool: list[str] | None = None
     _tx_msg_pool: list[dict] | None = None
     _fraud_note_pool: list[dict] | None = None
 
@@ -88,7 +87,8 @@ class TransactionLogGenerator(TableGenerator):
         return random_dt.strftime("%Y-%m-%d %H:%M:%S")
 
     def _generate_tx_type(self) -> str:
-        return random.choice(_TX_TYPES)
+        pool = self._load_tx_types_pool()
+        return random.choice(pool)
 
     def _generate_amount(self) -> float:
         """Random amount between 10,000 and 500,000,000 VND, rounded."""
@@ -175,6 +175,31 @@ class TransactionLogGenerator(TableGenerator):
     # ------------------------------------------------------------------ #
     # DB loading (cached)
     # ------------------------------------------------------------------ #
+    @classmethod
+    def _load_tx_types_pool(cls) -> list[str]:
+        """Fetch tx_types from Postgres. Cached after first call."""
+        if cls._tx_types_pool is not None:
+            return cls._tx_types_pool
+
+        query = "SELECT type_code FROM public.tx_types"
+
+        conn = psycopg2.connect(**_DB_CONFIG)
+        try:
+            with conn.cursor() as cur:
+                cur.execute(query)
+                rows = cur.fetchall()
+        finally:
+            conn.close()
+
+        if not rows:
+            raise RuntimeError(
+                "No data found in public.tx_types. "
+                "Make sure 05_CreateData_TxLogs.sql has been loaded."
+            )
+
+        cls._tx_types_pool = [r[0] for r in rows]
+        return cls._tx_types_pool
+
     @classmethod
     def _load_tx_msg_pool(cls) -> list[dict]:
         """Fetch tx_message_templates from Postgres. Cached after first call."""
