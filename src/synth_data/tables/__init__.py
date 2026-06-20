@@ -8,14 +8,17 @@ To add a new table:
 """
 
 from synth_data.tables.citizen_info import CitizenInfoGenerator
+from synth_data.tables.administrative_record import AdministrativeRecordGenerator
 
 # Maps table_name -> generator class.
 # Add new entries as you create more tables.
 REGISTRY: dict[str, type] = {
     CitizenInfoGenerator.table_name: CitizenInfoGenerator,
+    AdministrativeRecordGenerator.table_name: AdministrativeRecordGenerator,
 }
 
 __all__ = [
     "REGISTRY",
     "CitizenInfoGenerator",
+    "AdministrativeRecordGenerator",
 ]

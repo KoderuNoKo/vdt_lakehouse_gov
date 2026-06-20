@@ -2,6 +2,9 @@
 
 The goal is to build an automated data governance pipeline on a Data Lakehouse. The system will ingest datasets containing simulated PII (Personally Identifiable Information), classify sensitive data using a Regex \[+ LLM\] approach, store metadata in PostgreSQL, and enforce role-based dynamic masking when users query data.
 
+## Acknowledgments
+
+* The Vietnam provinces dataset and SQL initialization scripts for that dataset were sourced from [thanglequoc/vietnamese-provinces-database]([https://github.com/AuthorName/RepoName](https://github.com/thanglequoc/vietnamese-provinces-database)) under the MIT license.
 ## Project Structure
 
 ```text
