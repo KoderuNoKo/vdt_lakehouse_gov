@@ -37,38 +37,38 @@ class CitizenInfoGenerator(TableGenerator):
     def _generate_row(self, index: int) -> dict:
         return {
             "citizen_id": index + 1,
-            "full_name": self.generate_full_name(),
-            "national_id": self.generate_national_id(),  
-            "phone_number": self.generate_phone_num(),
-            "email": self.generate_email(),
-            "birth_date": self.generate_dob(minimum_age=18, maximum_age=100),
-            "address": self.generate_address(),
-            "occupation": self.generate_job(),
+            "full_name": self._generate_full_name(),
+            "national_id": self._generate_national_id(),  
+            "phone_number": self._generate_phone_num(),
+            "email": self._generate_email(),
+            "birth_date": self._generate_dob(minimum_age=18, maximum_age=100),
+            "address": self._generate_address(),
+            "occupation": self._generate_job(),
         }
 
-    def generate_full_name(self):
+    def _generate_full_name(self):
         """produce a fake full name using Faker"""
         return self.fake.name()
 
-    def generate_national_id(self):
+    def _generate_national_id(self):
         """produce a 12-digits cccd number starting with 0"""
         return self.fake.numerify("0###########")
 
-    def generate_phone_num(self) -> int:
+    def _generate_phone_num(self) -> int:
         """produce a vn phone num format, 2 valid prefix digits and 8 random digits"""
         prefixes = ['03', '05', '07', '08', '09']
         prefix = random.choice(prefixes)
         return self.fake.numerify(prefix + "########")
     
-    def generate_email(self):
+    def _generate_email(self):
         """produce a fake email using Faker"""
         return self.fake.email()
 
-    def generate_dob(self, minimum_age, maximum_age):
+    def _generate_dob(self, minimum_age, maximum_age):
         """produce a fake date of birth using Faker"""
         return self.fake.date_of_birth(minimum_age=minimum_age, maximum_age=maximum_age).isoformat()
 
-    def generate_address(self) -> str:
+    def _generate_address(self) -> str:
         """Build a realistic Vietnamese address.
 
         Format: ``<house_number> <street>, <ward>, <province>``
@@ -82,7 +82,7 @@ class CitizenInfoGenerator(TableGenerator):
 
         return f"{house_number} {street}, {ward_name}, {province_name}"
 
-    def generate_job(self):
+    def _generate_job(self):
         return self.fake.job()
 
     @classmethod

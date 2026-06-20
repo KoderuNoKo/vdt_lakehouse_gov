@@ -1,6 +1,6 @@
 """
 Generator for the administrative record table.
-- contains semi-structured data (notes)
+- contains semi-structured data (notes): may or may not contain sensitive data
 
 Purpose:
     - LLM semantic understanding
@@ -13,7 +13,6 @@ import re
 import psycopg2
 
 from synth_data.base import TableGenerator
-from synth_data.tables.citizen_info import CitizenInfoGenerator
 from synth_data.tables.settings import _DB_CONFIG
 
 
@@ -39,41 +38,48 @@ class AdministrativeRecordGenerator(TableGenerator):
     # Cached DB data — loaded once across all instances.
     _templates_pool: list[dict] | None = None
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        # Reuse CitizenInfoGenerator's PII helpers via composition.
-        self._citizen_gen = CitizenInfoGenerator(
-            locale=kwargs.get("locale", "vi_VN"),
-            seed=kwargs.get("seed"),
-        )
-
-    # ------------------------------------------------------------------ #
-    # Row generation
-    # ------------------------------------------------------------------ #
     def _generate_row(self, index: int) -> dict:
-        template = self._pick_template()
-
+        template = self._pick_clerk_note_template()
         return {
             "record_id": index + 1,
-            "service_type": template["service_name_vn"],
-            "applicant_name": self._citizen_gen.generate_full_name(),
-            "cccd_number": self._citizen_gen.generate_national_id(),
-            "submission_date": self.fake.date_between(
-                start_date="-2y", end_date="today"
-            ).isoformat(),
-            "status": template["status_en"],
-            "clerk_notes": self._render_clerk_note(template),
+            "service_type": self._generate_service_type(template),
+            "applicant_name": self._generate_full_name(),
+            "cccd_number": self._generate_national_id(),
+            "submission_date": self._generate_submission_date(),
+            "status": self._generate_status(template),
+            "clerk_notes": self._generate_clerk_note(template),
         }
 
-    # ------------------------------------------------------------------ #
-    # Template handling
-    # ------------------------------------------------------------------ #
-    def _pick_template(self) -> dict:
-        """Return a random template dict from the cached pool."""
-        pool = self._load_templates_pool()
-        return random.choice(pool)
+    def _generate_service_type(self, template: dict) -> str:
+        return template["service_name_vn"]
+    
+    def _generate_full_name(self) -> str:
+        """produce a fake full name using Faker"""
+        return self.fake.name()
 
-    def _render_clerk_note(self, template: dict) -> str:
+    def _generate_national_id(self) -> str:
+        """produce a 12-digits cccd number starting with 0"""
+        return self.fake.numerify("0###########")
+
+    def _generate_submission_date(self) -> str:
+        return self.fake.date_between(
+            start_date="-2y", end_date="today"
+        ).isoformat()
+
+    def _generate_status(self, template: dict) -> str:
+        return template["status_en"]
+
+    def _generate_phone_num(self) -> str:
+        """produce a vn phone num format, 2 valid prefix digits and 8 random digits"""
+        prefixes = ['03', '05', '07', '08', '09']
+        prefix = random.choice(prefixes)
+        return self.fake.numerify(prefix + "########")
+    
+    def _generate_email(self) -> str:
+        """produce a fake email using Faker"""
+        return self.fake.email()
+
+    def _generate_clerk_note(self, template: dict) -> str:
         """Replace PII placeholders in the clerk note if contain_pii is True."""
         note = template["clerk_note"]
 
@@ -82,10 +88,10 @@ class AdministrativeRecordGenerator(TableGenerator):
 
         # Map each placeholder to a generator method.
         pii_generators = {
-            "phone_number": self._citizen_gen.generate_phone_num,
-            "national_id": self._citizen_gen.generate_national_id,
-            "full_name": self._citizen_gen.generate_full_name,
-            "email": self._citizen_gen.generate_email,
+            "phone_number": self._generate_phone_num,
+            "national_id": self._generate_national_id,
+            "full_name": self._generate_full_name,
+            "email": self._generate_email,
             "bank_account": self._generate_bank_account,
         }
 
@@ -98,17 +104,11 @@ class AdministrativeRecordGenerator(TableGenerator):
 
         return re.sub(r"\$\{(\w+)\}", _replacer, note)
 
-    # ------------------------------------------------------------------ #
-    # Extra PII generators (not in CitizenInfoGenerator)
-    # ------------------------------------------------------------------ #
     def _generate_bank_account(self) -> str:
         """Produce a fake Vietnamese bank account number (10-14 digits)."""
         length = random.choice([10, 12, 13, 14])
         return self.fake.numerify("#" * length)
 
-    # ------------------------------------------------------------------ #
-    # DB loading (cached)
-    # ------------------------------------------------------------------ #
     @classmethod
     def _load_templates_pool(cls) -> list[dict]:
         """Fetch clerk_notes_templates joined with service_types and
@@ -151,3 +151,8 @@ class AdministrativeRecordGenerator(TableGenerator):
             for r in rows
         ]
         return cls._templates_pool
+    
+    def _pick_clerk_note_template(self) -> dict:
+        """Return a random template dict from the cached pool."""
+        pool = self._load_templates_pool()
+        return random.choice(pool)
