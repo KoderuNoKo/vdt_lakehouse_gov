@@ -64,9 +64,9 @@ cp .env.example .env
 #### Submit a Spark Job
 
 ```powershell
-docker exec spark-master /opt/spark/bin/spark-submit /opt/spark/jobs/test_conns.py
+.\scripts\submit_spark_job.ps1 ingest_csv_to_iceberg.py 
 ```
-
+- The `submit_spark_job` is a single script to execute all the steps required to submit a spark job. Including zipping the `modules` package and submit it along side the main job.
 #### Update Python Dependencies
 
 ```powershell
