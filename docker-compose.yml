@@ -30,6 +30,7 @@ services:
     build:
       context: ./docker/spark
     container_name: spark-master
+    env_file: .env
     # start spark as master
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
     ports:
@@ -38,11 +39,13 @@ services:
     volumes:
       - spark-data:/opt/spark/data
       - ./src/spark_jobs:/opt/spark/jobs
+      - ./data:/opt/spark/data/csv
 
   spark-worker:
     build:
       context: ./docker/spark
     container_name: spark-worker
+    env_file: .env
     # start spark as worker
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     depends_on:
@@ -52,6 +55,7 @@ services:
     volumes:
       - spark-data:/opt/spark/data
       - ./src/spark_jobs:/opt/spark/jobs
+      - ./data:/opt/spark/data/csv
 
 volumes:
   pg-data:

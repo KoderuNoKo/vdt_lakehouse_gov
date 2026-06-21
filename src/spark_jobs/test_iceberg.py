@@ -1,89 +1,47 @@
 # pyrefly: ignore [missing-import]
-from pyspark.sql import SparkSession
+"""
+Test script: verify Iceberg catalog connectivity.
 
-spark = (
-    SparkSession.builder
-    .appName("test-iceberg")
+Creates a test namespace, table, and inserts sample data.
 
-    # create a catalog named 'lakehouse'
-    .config(
-        "spark.sql.catalog.lakehouse",
-        "org.apache.iceberg.spark.SparkCatalog"
-    )
-    # set lakehouse catalog to use postgresql
-    .config(
-        "spark.sql.catalog.lakehouse.type",
-        "jdbc"
-    )
-    # set connection + add credentials for postgresql
-    .config(
-        "spark.sql.catalog.lakehouse.uri",
-        "jdbc:postgresql://postgres:5432/pg_iceberg?currentSchema=ib_catalog"
-    )
-    .config(
-        "spark.sql.catalog.lakehouse.jdbc.user",
-        "postgres"
-    )
-    .config(
-        "spark.sql.catalog.lakehouse.jdbc.password",
-        "postgres"
-    )
-    # create a bucket in Minio to store all iceberg files
-    .config(
-        "spark.sql.catalog.lakehouse.warehouse",
-        "s3a://lakehouse/"
-    )
-    # set connection + add credentials for minio
-    .config(
-        "spark.hadoop.fs.s3a.endpoint",
-        "http://minio:9000"
-    )
-    .config(
-        "spark.hadoop.fs.s3a.access.key",
-        "minio"
-    )
-    .config(
-        "spark.hadoop.fs.s3a.secret.key",
-        "minio_password"
-    )
-    
-    .config(
-        "spark.hadoop.fs.s3a.path.style.access",
-        "true"
-    )
-    .config(
-        "spark.hadoop.fs.s3a.impl",
-        "org.apache.hadoop.fs.s3a.S3AFileSystem"
-    )
+Usage:
+    /opt/spark/bin/spark-submit \
+        --master spark://spark-master:7077 \
+        --py-files /opt/spark/jobs/modules.zip \
+        /opt/spark/jobs/test_iceberg.py
+"""
 
-    .getOrCreate()
-)
+from modules.config import load_config
+from modules.spark_session import build_spark_session
+
+
+cfg = load_config()
+spark = build_spark_session("test-iceberg", cfg)
+catalog = cfg["catalog_name"]
 
 # create a test namespace (schema)
-spark.sql(
-    """
+spark.sql(f"""
     CREATE NAMESPACE IF NOT EXISTS
-    lakehouse.test
-    """
-)
+    {catalog}.test
+""")
+
 # test create a table
-spark.sql(
-    """
+spark.sql(f"""
     CREATE TABLE IF NOT EXISTS
-    lakehouse.demo.people
+    {catalog}.demo.people
     (
         id INT,
         name STRING
     )
     USING iceberg
-    """
-)
+""")
+
 # test insert data into the table
-spark.sql(
-    """
-    INSERT INTO lakehouse.demo.people
+spark.sql(f"""
+    INSERT INTO {catalog}.demo.people
     VALUES
     (1, 'Alice'),
     (2, 'Bob')
-    """
-)
+""")
+
+spark.stop()

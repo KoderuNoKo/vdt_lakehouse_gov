@@ -1,8 +1,23 @@
+# pyrefly: ignore [missing-import]
+"""
+Test script: verify PostgreSQL and MinIO connectivity from the Spark container.
+
+Usage:
+    /opt/spark/bin/spark-submit \
+        --master spark://spark-master:7077 \
+        --py-files /opt/spark/jobs/modules.zip \
+        /opt/spark/jobs/test_conns.py
+"""
+
 import urllib.request
 
-# pyrefly: ignore [missing-import]
 from pyspark.sql import SparkSession
 import psycopg2
+
+from modules.config import load_config
+
+
+cfg = load_config()
 
 spark = (
     SparkSession.builder
@@ -13,11 +28,11 @@ spark = (
 # test postgresql connection
 try:
     conn = psycopg2.connect(
-        host="postgres",
-        port=5432,
-        user="postgres",
-        password="postgres",
-        dbname="pg_iceberg"
+        host=cfg["db_host"],
+        port=int(cfg["db_port"]),
+        user=cfg["db_user"],
+        password=cfg["db_password"],
+        dbname=cfg["db_name"],
     )
     cur = conn.cursor()
     cur.execute("SELECT 1")
@@ -30,7 +45,7 @@ except Exception as e:
 # test minio connection
 try:
     response = urllib.request.urlopen(
-        "http://minio:9000/minio/health/live"
+        f"{cfg['lh_endpoint']}/minio/health/live"
     )
 
     print("Minio-AIStor connection OK!", response.status)
