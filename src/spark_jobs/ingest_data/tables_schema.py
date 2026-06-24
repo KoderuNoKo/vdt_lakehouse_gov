@@ -1,5 +1,5 @@
 """
-define the schema for all the raw data tables in the lakehouse
+Define the schema for all the raw data tables in the lakehouse.
 """
 
 from pyspark.sql import types as T

@@ -1,33 +1,33 @@
 <#
 .SYNOPSIS
-    Zip the shared Python modules and submit a Spark job to the spark-master container.
+    Zip the entire spark_jobs project and submit a Spark job to the spark-master container.
 
 .DESCRIPTION
-    1. Builds modules.zip from /opt/spark/jobs/modules inside the spark-master container
+    1. Builds project.zip from /opt/spark/jobs/ inside the spark-master container
        (using Python's zipfile — no external 'zip' binary required).
-    2. Submits the specified job via spark-submit with --py-files modules.zip.
+    2. Submits the specified job via spark-submit with --py-files project.zip.
 
 .PARAMETER JobFile
-    Name of the Python job file to submit (e.g. ingest_csv_to_iceberg.py).
-    The file must exist under src/spark_jobs/ (mounted at /opt/spark/jobs/ in the container).
+    Relative path to the Python job file to submit
+    (e.g. ingest_data/ingest_csv.py, pipelines/metadata_ingestion.py).
+    The path is relative to src/spark_jobs/ (mounted at /opt/spark/jobs/ in the container).
 
 .EXAMPLE
-    .\scripts\submit_spark_job.ps1 ingest_csv_to_iceberg.py
-    .\scripts\submit_spark_job.ps1 test_iceberg.py
+    .\scripts\submit_spark_job.ps1 ingest_data/ingest_csv.py
+    .\scripts\submit_spark_job.ps1 pipelines/metadata_ingestion.py
     .\scripts\submit_spark_job.ps1 test_conns.py
 #>
 
 param(
     [Parameter(Mandatory = $true, Position = 0,
-               HelpMessage = "Name of the Spark job file (e.g. ingest_csv_to_iceberg.py)")]
+               HelpMessage = "Relative path to the job file (e.g. ingest_data/ingest_csv.py)")]
     [string]$JobFile
 )
 
 # ── Constants ────────────────────────────────────────────────────────────────
 $Container   = "spark-master"
 $JobsDir     = "/opt/spark/jobs"
-$ModulesDir  = "$JobsDir/modules"
-$ZipPath     = "$JobsDir/modules.zip"
+$ZipPath     = "/tmp/project.zip"
 $SparkMaster = "spark://spark-master:7077"
 
 # ── Preflight checks ────────────────────────────────────────────────────────
@@ -50,7 +50,7 @@ docker exec $Container test -f "$JobsDir/$JobFile"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Job file not found: $JobsDir/$JobFile" -ForegroundColor Red
     Write-Host "        Available jobs:" -ForegroundColor Yellow
-    docker exec $Container find $JobsDir -maxdepth 1 -name "*.py" -printf "          %f\n"
+    docker exec $Container find $JobsDir -name "*.py" -not -path "*__pycache__*" -printf "          %P\n"
     exit 1
 }
 
@@ -58,23 +58,24 @@ Write-Host "[INFO]  Job file : $JobFile" -ForegroundColor Green
 Write-Host "[INFO]  Container: $Container" -ForegroundColor Green
 Write-Host ""
 
-# ── Step 1: Zip the modules directory ────────────────────────────────────────
-Write-Host "[1/2] Zipping modules..." -ForegroundColor Yellow
+# ── Step 1: Zip the entire project directory ─────────────────────────────────
+Write-Host "[1/2] Zipping project..." -ForegroundColor Yellow
 
-# Use Python's zipfile to create the archive (zip CLI may not be installed)
+# Use Python's zipfile to create the archive (zip CLI may not be installed).
+# Zips all .py files under /opt/spark/jobs/, skipping __pycache__ and .pyc.
+# Archive paths are relative to $JobsDir so imports resolve correctly.
 $zipScript = @"
-import zipfile, os, sys
+import zipfile, os
 zip_path = '$ZipPath'
-modules_dir = '$ModulesDir'
+jobs_dir = '$JobsDir'
 with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
-    for root, dirs, files in os.walk(modules_dir):
-        # skip __pycache__
+    for root, dirs, files in os.walk(jobs_dir):
         dirs[:] = [d for d in dirs if d != '__pycache__']
         for f in files:
-            if f.endswith('.pyc'):
+            if not f.endswith('.py'):
                 continue
             full = os.path.join(root, f)
-            arcname = os.path.relpath(full, os.path.dirname(modules_dir))
+            arcname = os.path.relpath(full, jobs_dir)
             zf.write(full, arcname)
             print(f'  + {arcname}')
 print(f'\nCreated {zip_path}')
@@ -82,7 +83,7 @@ print(f'\nCreated {zip_path}')
 
 docker exec $Container python3 -c $zipScript
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Failed to create modules.zip" -ForegroundColor Red
+    Write-Host "[ERROR] Failed to create project.zip" -ForegroundColor Red
     exit 1
 }
 

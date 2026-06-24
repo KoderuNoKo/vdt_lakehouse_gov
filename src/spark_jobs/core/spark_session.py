@@ -16,7 +16,7 @@ def build_spark_session(app_name: str, config: dict) -> SparkSession:
     app_name : str
         The Spark application name.
     config : dict
-        Configuration dict returned by ``modules.config.load_config()``.
+        Configuration dict returned by ``core.config.load_config()``.
 
     Returns
     -------

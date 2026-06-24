@@ -1,4 +1,3 @@
-# pyrefly: ignore [missing-import]
 """
 Test script: verify PostgreSQL and MinIO connectivity from the Spark container.
 
@@ -14,7 +13,7 @@ import urllib.request
 from pyspark.sql import SparkSession
 import psycopg2
 
-from modules.config import load_config
+from core.config import load_config
 
 
 cfg = load_config()

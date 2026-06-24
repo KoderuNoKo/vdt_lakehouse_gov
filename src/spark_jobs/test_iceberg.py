@@ -1,4 +1,3 @@
-# pyrefly: ignore [missing-import]
 """
 Test script: verify Iceberg catalog connectivity.
 
@@ -11,8 +10,8 @@ Usage:
         /opt/spark/jobs/test_iceberg.py
 """
 
-from modules.config import load_config
-from modules.spark_session import build_spark_session
+from core.config import load_config
+from core.spark_session import build_spark_session
 
 
 cfg = load_config()

@@ -1,4 +1,3 @@
-# pyrefly: ignore [missing-import]
 """
 Spark job: Ingest CSV files into Iceberg tables on MinIO.
 
@@ -13,9 +12,9 @@ from pyspark.sql import SparkSession
 from pyspark.sql import types as T
 from pyspark.sql import functions as F
 
-from modules.config import load_config
-from modules.spark_session import build_spark_session
-from modules.tables_schema import SCHEMAS
+from core.config import load_config
+from core.spark_session import build_spark_session
+from ingest_data.tables_schema import SCHEMAS
 
 
 # ---------------------------------------------------------------------------
