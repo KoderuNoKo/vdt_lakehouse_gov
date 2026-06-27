@@ -13,20 +13,21 @@ The goal is to build an automated data governance pipeline on a Data Lakehouse. 
 
 ```text
 .
-.
-├── README.md # you are here!
-├── docker
-│   ├── minio
-│   ├── postgres
-│   └── spark
+├── data/                       # generated CSV datasets (PII-laden test data)
+├── docker/
+│   ├── minio/                  # MinIO (object storage) config
+│   ├── postgres/               # SQL init scripts (schemas, seed data, metadata store DDL)
+│   ├── spark/                  # Spark image config + JARs + Python requirements
+│   └── host/                   # host-side Python requirements
+├── docs/                       # project specs and plan
+├── scripts/
+│   └── submit_spark_job.ps1    # helper to zip + spark-submit jobs
+├── src/
+│   ├── spark_jobs/             # all Spark job code (see src/spark_jobs/README.md)
+│   └── synth_data/             # synthetic data generator (produces the CSVs in data/)
 ├── docker-compose.yml
-├── docs
-│   ├── Apache_Iceberg.note.md
-│   ├── Meeting.note.md
-│   ├── Project_Discovery.note.md
-│   └── project_specs.pdf
-└── src
-    └── spark_jobs
+├── .env.example                # template for environment variables
+└── .env                        # actual env vars (not committed)
 ```
 
 ---
@@ -47,60 +48,65 @@ The Spark image requires the following JVM dependencies. Downloaded from Maven C
 Once the JAR files are downloaded. Place them under [`./docker/spark/jars`](docker/spark/jars) directory. Where docker will attach them into the created image
 
 ---
-## Dev Environment
+## Getting Started
 
-This project is developed entirely on Docker, from the project root, run this command to start all services 
-
-```bash
-docker compose up -d
-```
-
-### Configurations
-
-Most configuration comes from environment variables. It is required that environment variables are available, create an `.env` file from [`.env.example`](.env.example), replace information as needed, and place it at the project root
+### 1. Configure environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Some key variables are:
+Edit `.env` as needed. See the [Configuration](#configuration) section below.
 
-| Variable                  | Default               | Purpose                                         |
-| ------------------------- | --------------------- | ----------------------------------------------- |
-| `DB_HOST_CONTAINER`       | `postgres`            | PostgreSQL hostname to access *from containers* |
-| `DB_PORT_CONTAINER`       | `5432`                | PostgreSQL port                                 |
-| `DB_NAME`                 | `pg_iceberg`          | Database name                                   |
-| `DB_USER` / `DB_PASSWORD` | `postgres`            | DB credentials                                  |
-| `LH_HOST_CONTAINER`       | `minio`               | MinIO hostname                                  |
-| `ICEBERG_CATALOG_NAME`    | `lakehouse`           | Spark catalog name                              |
-| `ICEBERG_NAMESPACE`       | `raw`                 | Default Iceberg namespace                       |
-| `CSV_DIR`                 | `/opt/spark/data/csv` | Where CSVs are mounted                          |
+### 2. Start all services
+
+```bash
+docker compose up -d
+```
 
 ---
-## Available Services and Commands
+## Configurations
 
-### Spark Master
+Some key variables are:
 
-#### Spark Master UI
-[http://localhost:8080](http://localhost:8080/)
+| Variable                  | Purpose                   |
+| ------------------------- | ------------------------- |
+| `DB_HOST_CONTAINER`       | PostgreSQL hostname       |
+| `DB_PORT_CONTAINER`       | PostgreSQL port           |
+| `DB_NAME`                 | Database name             |
+| `DB_USER` / `DB_PASSWORD` | DB credentials            |
+| `LH_HOST_CONTAINER`       | MinIO hostname            |
+| `ICEBERG_CATALOG_NAME`    | Spark catalog name        |
+| `ICEBERG_NAMESPACE`       | Default Iceberg namespace |
+| `CSV_DIR`                 | Where CSVs are mounted    |
 
-#### Submit a Spark Job
+**Note:** Connection with `_CONTAINER` suffix are for connections between containers. While `_LOCAL` suffix are for connection to containers from host machine.
+
+---
+## Available Services and Command
+
+| Service         | URL                                             | Purpose                                    |
+| --------------- | ----------------------------------------------- | ------------------------------------------ |
+| Spark Master UI | [http://localhost:8080](http://localhost:8080/) | Monitor Spark jobs and workers             |
+| MinIO Console   | [http://localhost:9001](http://localhost:9001/) | Browse object storage (Iceberg data files) |
+| PostgreSQL      | `localhost:5433`                                | Iceberg catalog + metadata store           |
+
+### Submitting Spark Jobs
 
 ```powershell
-.\scripts\submit_spark_job.ps1 pipelines/ingest_csv_to_iceberg.py 
+.\scripts\submit_spark_job.ps1 <path-relative-to-spark_jobs>
 ```
-- The `submit_spark_job` is a single script to execute all the steps required to submit a spark job. Including zipping the `modules` package and submit it along side the main job.
-- Replace `pipelines/ingest_csv_to_iceberg.py` with the relative path of the targeted job from inside the `spark_job` directory.
-#### Update Spark Python Dependencies
+
+The script zips all Python modules, copies them into the `spark-master` container, and runs `spark-submit`. The path is relative to `src/spark_jobs/`.
+
+### Updating Spark Python Dependencies
 
 ```powershell
 docker exec spark-master pip freeze > .\docker\spark\requirements.txt
 ```
 
-### MinIO Console
+### Updating Host Python Dependencies
 
-[http://localhost:9001](http://localhost:9001/)
-
-### PostgreSQL
-
-[http://localhost:5433](http://localhost:5433/)
+```powershell
+pip freeze > .\docker\host\requirements.txt
+```
