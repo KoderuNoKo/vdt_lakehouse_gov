@@ -2,9 +2,13 @@
 
 The goal is to build an automated data governance pipeline on a Data Lakehouse. The system will ingest datasets containing simulated PII (Personally Identifiable Information), classify sensitive data using a Regex \[+ LLM\] approach, store metadata in PostgreSQL, and enforce role-based dynamic masking when users query data.
 
+---
 ## Acknowledgments
 
 * The Vietnam provinces dataset and SQL initialization scripts for that dataset were sourced from [thanglequoc/vietnamese-provinces-database](https://github.com/thanglequoc/vietnamese-provinces-database) under the MIT license.
+
+---
+
 ## Project Structure
 
 ```text
@@ -25,6 +29,7 @@ The goal is to build an automated data governance pipeline on a Data Lakehouse. 
     └── spark_jobs
 ```
 
+---
 ## Requirements
 
 - Docker
@@ -41,6 +46,7 @@ The Spark image requires the following JVM dependencies. Downloaded from Maven C
 
 Once the JAR files are downloaded. Place them under [`./docker/spark/jars`](docker/spark/jars) directory. Where docker will attach them into the created image
 
+---
 ## Dev Environment
 
 This project is developed entirely on Docker, from the project root, run this command to start all services 
@@ -49,11 +55,28 @@ This project is developed entirely on Docker, from the project root, run this co
 docker compose up -d
 ```
 
-It is also required that environment variables are available, create an `.env` file from [`.env.example`](.env.example), replace information as needed, and place it at the project root
+### Configurations
+
+Most configuration comes from environment variables. It is required that environment variables are available, create an `.env` file from [`.env.example`](.env.example), replace information as needed, and place it at the project root
 
 ```bash
 cp .env.example .env
 ```
+
+Some key variables are:
+
+| Variable                  | Default               | Purpose                                         |
+| ------------------------- | --------------------- | ----------------------------------------------- |
+| `DB_HOST_CONTAINER`       | `postgres`            | PostgreSQL hostname to access *from containers* |
+| `DB_PORT_CONTAINER`       | `5432`                | PostgreSQL port                                 |
+| `DB_NAME`                 | `pg_iceberg`          | Database name                                   |
+| `DB_USER` / `DB_PASSWORD` | `postgres`            | DB credentials                                  |
+| `LH_HOST_CONTAINER`       | `minio`               | MinIO hostname                                  |
+| `ICEBERG_CATALOG_NAME`    | `lakehouse`           | Spark catalog name                              |
+| `ICEBERG_NAMESPACE`       | `raw`                 | Default Iceberg namespace                       |
+| `CSV_DIR`                 | `/opt/spark/data/csv` | Where CSVs are mounted                          |
+
+---
 ## Available Services and Commands
 
 ### Spark Master
@@ -64,10 +87,11 @@ cp .env.example .env
 #### Submit a Spark Job
 
 ```powershell
-.\scripts\submit_spark_job.ps1 ingest_csv_to_iceberg.py 
+.\scripts\submit_spark_job.ps1 pipelines/ingest_csv_to_iceberg.py 
 ```
 - The `submit_spark_job` is a single script to execute all the steps required to submit a spark job. Including zipping the `modules` package and submit it along side the main job.
-#### Update Python Dependencies
+- Replace `pipelines/ingest_csv_to_iceberg.py` with the relative path of the targeted job from inside the `spark_job` directory.
+#### Update Spark Python Dependencies
 
 ```powershell
 docker exec spark-master pip freeze > .\docker\spark\requirements.txt

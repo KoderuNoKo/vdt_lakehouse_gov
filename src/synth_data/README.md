@@ -1,7 +1,8 @@
 # synth_data
 
-Synthetic data generation module.
-Generates realistic Vietnamese-locale fake data using **Faker** and **pandas**.
+- Synthetic data generation module.
+- Generates realistic Vietnamese-locale fake data using **Faker** and **pandas**.
+- This module is intended to run on host machine, not in docker containers or Spark.
 
 ## Structure
 
