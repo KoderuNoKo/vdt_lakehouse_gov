@@ -93,10 +93,11 @@ Write-Host ""
 Write-Host "[2/2] Submitting job..." -ForegroundColor Yellow
 Write-Host ""
 
-docker exec $Container /opt/spark/bin/spark-submit `
+# Merge stderr into stdout so Spark logs and Python tracebacks appear in order.
+docker exec -i $Container /opt/spark/bin/spark-submit `
     --master $SparkMaster `
     --py-files $ZipPath `
-    "$JobsDir/$JobFile"
+    "$JobsDir/$JobFile" 2>&1
 
 $exitCode = $LASTEXITCODE
 

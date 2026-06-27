@@ -6,6 +6,8 @@ Builds a connection URL from the same env-var-based config used by Spark jobs
 database credentials.
 """
 
+from __future__ import annotations
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
