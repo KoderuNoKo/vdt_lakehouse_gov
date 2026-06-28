@@ -12,8 +12,7 @@ spark_jobs/
 │   └── spark_session.py        # build_spark_session() — Iceberg + S3A config
 │
 ├── ingest_data/                # CSV → Iceberg ingestion
-│   ├── tables_schema.py        # PySpark StructType definitions for each table
-│   └── ingest_csv.py           # reads CSVs, writes Iceberg tables
+│   └── tables_schema.py        # PySpark StructType definitions for each table
 │
 ├── metadata_proccessor/        # read-only Iceberg catalog interaction
 │   ├── catalog_client.py       # CatalogClient — list tables, load DataFrames, read schema
@@ -24,6 +23,7 @@ spark_jobs/
 │   └── repository.py           # MetadataRepository — simple query/insert methods
 │
 ├── pipelines/                  # orchestrator scripts (entry points for spark-submit)
+│   ├── ingest_csv.py           # reads CSVs, writes Iceberg tables
 │   └── metadata_ingestion.py   # scan Iceberg tables → write metadata to PostgreSQL
 │
 ├── test_conns.py               # smoke test: PostgreSQL + MinIO connectivity

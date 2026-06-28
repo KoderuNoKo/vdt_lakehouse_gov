@@ -2,12 +2,12 @@
 
 The goal is to build an automated data governance pipeline on a Data Lakehouse. The system will ingest datasets containing simulated PII (Personally Identifiable Information), classify sensitive data using a Regex \[+ LLM\] approach, store metadata in PostgreSQL, and enforce role-based dynamic masking when users query data.
 
----
+
 ## Acknowledgments
 
 * The Vietnam provinces dataset and SQL initialization scripts for that dataset were sourced from [thanglequoc/vietnamese-provinces-database](https://github.com/thanglequoc/vietnamese-provinces-database) under the MIT license.
 
----
+
 
 ## Project Structure
 
@@ -30,7 +30,7 @@ The goal is to build an automated data governance pipeline on a Data Lakehouse. 
 └── .env                        # actual env vars (not committed)
 ```
 
----
+
 ## Requirements
 
 - Docker
@@ -47,7 +47,7 @@ The Spark image requires the following JVM dependencies. Downloaded from Maven C
 
 Once the JAR files are downloaded. Place them under [`./docker/spark/jars`](docker/spark/jars) directory. Where docker will attach them into the created image
 
----
+
 ## Getting Started
 
 ### 1. Configure environment variables
@@ -64,7 +64,7 @@ Edit `.env` as needed. See the [Configuration](#configuration) section below.
 docker compose up -d
 ```
 
----
+
 ## Configurations
 
 Some key variables are:
@@ -82,7 +82,7 @@ Some key variables are:
 
 **Note:** Connection with `_CONTAINER` suffix are for connections between containers. While `_LOCAL` suffix are for connection to containers from host machine.
 
----
+
 ## Available Services and Command
 
 | Service         | URL                                             | Purpose                                    |
