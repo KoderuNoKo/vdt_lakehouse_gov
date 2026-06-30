@@ -84,25 +84,41 @@ CREATE TABLE tables_metadata (
 );
 
 CREATE TABLE columns_metadata (
+    -- column's raw metadata
     id SERIAL PRIMARY KEY,
     table_id INTEGER NOT NULL
         REFERENCES tables_metadata(id)
         ON DELETE CASCADE,
     column_name VARCHAR(255) NOT NULL,
     data_type VARCHAR(100) NOT NULL,
+    sample_values JSONB,
+
+    -- latest/active pii scan record
     pii_category_id INTEGER
         REFERENCES pii_categories(id),
-    sensitivity_level_id INTEGER
+    sensitivity_level_id INTEGER    -- can override default sensitivity, as stated by project specs
         REFERENCES sensitivity_levels(id),
     detection_method detection_method_enum,
     confidence_score NUMERIC(5,4),
-    sample_values JSONB,
+    
+    -- quick filter
     scanned BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     -- constraints
     UNIQUE(table_id, column_name)
+);
+
+-- historical log of pii scans
+CREATE TABLE pii_scan_record (
+    id SERIAL PRIMARY KEY,
+    column_id INT REFERENCES columns_metadata(id),
+    scan_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    detection_method detection_method_enum,
+    confidence_score NUMERIC(5,4),
+    detected_category_id INT REFERENCES pii_categories(id)
+    -- raw_output JSONB -- useful for LLM debugging/audit (not yet used)
 );
 
 -- ACCESS CONTROL

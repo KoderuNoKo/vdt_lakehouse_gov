@@ -23,6 +23,7 @@ from metadata_store.model import (
     ColumnMetadata,
     MaskingFunctionModel,
     PIICategoryModel,
+    PiiScanRecord,
     Role,
     SensitivityLevelModel,
     TableMetadata,
@@ -114,6 +115,24 @@ class MetadataRepository:
             setattr(entry, key, value)
         self.session.flush()
         return entry
+
+    def add_scan_record(
+        self,
+        column_id: int,
+        detection_method,
+        confidence_score,
+        detected_category_id: int | None,
+    ) -> PiiScanRecord:
+        """Add a historical record of a PII scan to ``pii_scan_record``."""
+        record = PiiScanRecord(
+            column_id=column_id,
+            detection_method=detection_method,
+            confidence_score=confidence_score,
+            detected_category_id=detected_category_id,
+        )
+        self.session.add(record)
+        self.session.flush()
+        return record
 
     # ------------------------------------------------------------------ #
     # access_policies

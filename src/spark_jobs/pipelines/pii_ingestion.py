@@ -113,7 +113,14 @@ def _apply_result(
         detection_method=detection_method,
         confidence_score=round(result.confidence, 4),
         sample_values=json.dumps(sample_values[:10], ensure_ascii=False, default=str),
-        scanned=True,
+        scanned=True if result.detection_method is not DetectionMethod.UNKNOWN else False,
+    )
+
+    repo.add_scan_record(
+        column_id=column_id,
+        detection_method=detection_method,
+        confidence_score=round(result.confidence, 4),
+        detected_category_id=pii_category_id,
     )
 
 

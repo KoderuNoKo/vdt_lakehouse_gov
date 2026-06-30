@@ -185,6 +185,31 @@ class ColumnMetadata(Base):
     sensitivity_level = relationship(
         "SensitivityLevelModel", foreign_keys=[sensitivity_level_id]
     )
+    scan_records = relationship(
+        "PiiScanRecord",
+        back_populates="column",
+        cascade="all, delete-orphan",
+    )
+
+
+class PiiScanRecord(Base):
+    """``ib_metadata.pii_scan_record`` — historical log of pii scans."""
+
+    __tablename__ = "pii_scan_record"
+    __table_args__ = {"schema": SCHEMA}
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    column_id = Column(
+        Integer, ForeignKey(f"{SCHEMA}.columns_metadata.id", ondelete="CASCADE")
+    )
+    scan_timestamp = Column(TIMESTAMP, server_default="CURRENT_TIMESTAMP")
+    detection_method = Column(detection_method_type)
+    confidence_score = Column(Numeric(5, 4))
+    detected_category_id = Column(Integer, ForeignKey(f"{SCHEMA}.pii_categories.id"))
+
+    # relationships
+    column = relationship("ColumnMetadata", back_populates="scan_records")
+    detected_category = relationship("PIICategoryModel", foreign_keys=[detected_category_id])
 
 
 # ============================================================
