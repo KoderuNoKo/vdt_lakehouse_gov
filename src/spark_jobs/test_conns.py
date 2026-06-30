@@ -27,11 +27,11 @@ spark = (
 # test postgresql connection
 try:
     conn = psycopg2.connect(
-        host=cfg["db_host"],
-        port=int(cfg["db_port"]),
-        user=cfg["db_user"],
-        password=cfg["db_password"],
-        dbname=cfg["db_name"],
+        host=cfg.db_host,
+        port=int(cfg.db_port),
+        user=cfg.db_user,
+        password=cfg.db_password,
+        dbname=cfg.db_name,
     )
     cur = conn.cursor()
     cur.execute("SELECT 1")
@@ -44,7 +44,7 @@ except Exception as e:
 # test minio connection
 try:
     response = urllib.request.urlopen(
-        f"{cfg['lh_endpoint']}/minio/health/live"
+        f"{cfg.lh_endpoint}/minio/health/live"
     )
 
     print("Minio-AIStor connection OK!", response.status)

@@ -11,53 +11,49 @@ defaults).
 """
 
 import os
+from dataclasses import dataclass, field
+
+@dataclass
+class Config:
+    catalog_name: str = field(default_factory=lambda: os.getenv("ICEBERG_CATALOG_NAME", "lakehouse"))
+    namespace: str = field(default_factory=lambda: os.getenv("ICEBERG_NAMESPACE", "raw"))
+
+    db_host: str = field(default_factory=lambda: os.getenv("DB_HOST_CONTAINER", "postgres"))
+    db_port: str = field(default_factory=lambda: os.getenv("DB_PORT_CONTAINER", "5432"))
+    db_name: str = field(default_factory=lambda: os.getenv("DB_NAME", "pg_iceberg"))
+    db_catalog_schema: str = field(default_factory=lambda: os.getenv("DB_CATALOG_SCHEMA", "ib_catalog"))
+    db_metadata_schema: str = field(default_factory=lambda: os.getenv("DB_METADATA_SCHEMA", "ib_metadata"))
+    db_user: str = field(default_factory=lambda: os.getenv("DB_USER", "postgres"))
+    db_password: str = field(default_factory=lambda: os.getenv("DB_PASSWORD", "postgres"))
+
+    lh_host: str = field(default_factory=lambda: os.getenv("LH_HOST_CONTAINER", "minio"))
+    lh_port: str = field(default_factory=lambda: os.getenv("LH_PORT_CONTAINER_API", "9000"))
+    lh_user: str = field(default_factory=lambda: os.getenv("LH_USER", "minio"))
+    lh_password: str = field(default_factory=lambda: os.getenv("LH_PASSWORD", "minio_password"))
+    warehouse_path: str = field(default_factory=lambda: os.getenv("WAREHOUSE_PATH", "s3a://lakehouse/"))
+
+    csv_dir: str = field(default_factory=lambda: os.getenv("CSV_DIR", "/opt/spark/data/csv"))
+
+    @property
+    def jdbc_url(self) -> str:
+        """jdbc url for **iceberg catalog**"""
+        return f"jdbc:postgresql://{self.db_host}:{self.db_port}/{self.db_name}?currentSchema={self.db_catalog_schema}"
+
+    @property
+    def lh_endpoint(self) -> str:
+        return f"http://{self.lh_host}:{self.lh_port}"
 
 
-def load_config() -> dict:
+_CONFIG = None
+
+def load_config() -> Config:
     """Load configuration from environment variables.
 
-    Returns a dict with all connection details, paths, and catalog settings
-    needed by the Spark jobs.  Derived values (JDBC URL, MinIO endpoint)
-    are computed from the base env vars.
+    Returns a global Config object with all connection details, paths, and catalog settings
+    needed by the Spark jobs. Derived values (JDBC URL, MinIO endpoint)
+    are computed as properties.
     """
-
-    db_host   = os.getenv("DB_HOST_CONTAINER", "postgres")
-    db_port   = os.getenv("DB_PORT_CONTAINER", "5432")
-    db_name   = os.getenv("DB_NAME", "pg_iceberg")
-    db_schema = os.getenv("DB_SCHEMA", "ib_catalog")
-    db_user   = os.getenv("DB_USER", "postgres")
-    db_pass   = os.getenv("DB_PASSWORD", "postgres")
-
-    lh_host = os.getenv("LH_HOST_CONTAINER", "minio")
-    lh_port = os.getenv("LH_PORT_CONTAINER_API", "9000")
-    lh_user = os.getenv("LH_USER", "minio")
-    lh_pass = os.getenv("LH_PASSWORD", "minio_password")
-
-    return {
-        # ---- Iceberg catalog ------------------------------------------------
-        "catalog_name":   os.getenv("ICEBERG_CATALOG_NAME", "lakehouse"),
-        "namespace":      os.getenv("ICEBERG_NAMESPACE", "raw"),
-
-        # ---- PostgreSQL (Iceberg JDBC catalog backend) ----------------------
-        "db_host":        db_host,
-        "db_port":        db_port,
-        "db_name":        db_name,
-        "db_schema":      db_schema,
-        "db_user":        db_user,
-        "db_password":    db_pass,
-        "jdbc_url":       (
-            f"jdbc:postgresql://{db_host}:{db_port}"
-            f"/{db_name}?currentSchema={db_schema}"
-        ),
-
-        # ---- MinIO / S3A (Iceberg warehouse storage) ------------------------
-        "lh_host":        lh_host,
-        "lh_port":        lh_port,
-        "lh_user":        lh_user,
-        "lh_password":    lh_pass,
-        "lh_endpoint":    f"http://{lh_host}:{lh_port}",
-        "warehouse_path": os.getenv("WAREHOUSE_PATH", "s3a://lakehouse/"),
-
-        # ---- Data paths -----------------------------------------------------
-        "csv_dir":        os.getenv("CSV_DIR", "/opt/spark/data/csv"),
-    }
+    global _CONFIG
+    if _CONFIG is None:
+        _CONFIG = Config()
+    return _CONFIG

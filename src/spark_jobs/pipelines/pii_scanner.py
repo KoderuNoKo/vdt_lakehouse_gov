@@ -186,7 +186,7 @@ def main():
 
     # ---- Spark + Iceberg ---------------------------------------------------
     spark = build_spark_session("pii-scanner", cfg)
-    catalog_client = CatalogClient(spark, cfg["catalog_name"])
+    catalog_client = CatalogClient(spark, cfg.catalog_name)
     sampler = DataSampler(catalog_client)
 
     # ---- Metadata store (PostgreSQL) ---------------------------------------
@@ -194,7 +194,7 @@ def main():
     session = create_session(engine)
     repo = MetadataRepository(session)
 
-    namespace = cfg["namespace"]
+    namespace = cfg.namespace
 
     # ---- Build classifier from DB rules ------------------------------------
     print("=" * 60)
@@ -207,7 +207,7 @@ def main():
 
     # ---- Discover and scan tables ------------------------------------------
     tables = catalog_client.list_tables(namespace)
-    print(f"\nFound {len(tables)} table(s) in {cfg['catalog_name']}.{namespace}\n")
+    print(f"\nFound {len(tables)} table(s) in {cfg.catalog_name}.{namespace}\n")
 
     total_scanned = 0
     total_classified = 0

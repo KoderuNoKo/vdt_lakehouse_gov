@@ -111,8 +111,8 @@ def main():
 
     # ---- Spark -----------------------------------------------------------
     spark = build_spark_session("metadata-ingestion", cfg)
-    catalog_name = cfg["catalog_name"]
-    namespace = cfg["namespace"]
+    catalog_name = cfg.catalog_name
+    namespace = cfg.namespace
 
     # ---- Metadata processor components -----------------------------------
     catalog_client = CatalogClient(spark, catalog_name)

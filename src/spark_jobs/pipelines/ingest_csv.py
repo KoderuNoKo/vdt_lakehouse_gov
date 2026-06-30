@@ -12,7 +12,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql import types as T
 from pyspark.sql import functions as F
 
-from core.config import load_config
+from core.config import load_config, Config
 from core.spark_session import build_spark_session
 from ingest_data.tables_schema import SCHEMAS
 
@@ -25,11 +25,11 @@ def ingest_table(
     spark: SparkSession,
     table_name: str,
     schema: T.StructType,
-    cfg: dict,
+    cfg: Config,
 ):
     """Read a single CSV and write it as an Iceberg table."""
 
-    csv_path = os.path.join(cfg["csv_dir"], f"{table_name}.csv")
+    csv_path = os.path.join(cfg.csv_dir, f"{table_name}.csv")
 
     if not os.path.isfile(csv_path):
         print(f"[SKIP] File not found: {csv_path}")
@@ -51,7 +51,7 @@ def ingest_table(
     df = df.withColumn("_ingested_at", F.current_timestamp())
 
     # Full table name: <catalog>.<namespace>.<table_name>
-    full_table = f"{cfg['catalog_name']}.{cfg['namespace']}.{table_name}"
+    full_table = f"{cfg.catalog_name}.{cfg.namespace}.{table_name}"
 
     print(f"[WRITE] {full_table}")
     (
@@ -67,8 +67,8 @@ def main():
     cfg   = load_config()
     spark = build_spark_session("ingest-csv-to-iceberg", cfg)
 
-    catalog   = cfg["catalog_name"]
-    namespace = cfg["namespace"]
+    catalog   = cfg.catalog_name
+    namespace = cfg.namespace
 
     # Create the raw namespace if it does not exist
     spark.sql(f"CREATE NAMESPACE IF NOT EXISTS {catalog}.{namespace}")

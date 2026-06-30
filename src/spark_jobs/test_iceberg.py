@@ -16,7 +16,7 @@ from core.spark_session import build_spark_session
 
 cfg = load_config()
 spark = build_spark_session("test-iceberg", cfg)
-catalog = cfg["catalog_name"]
+catalog = cfg.catalog_name
 
 # create a test namespace (schema)
 spark.sql(f"""

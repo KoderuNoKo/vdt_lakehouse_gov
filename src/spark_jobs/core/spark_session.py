@@ -6,24 +6,25 @@ imports, so session configuration is never duplicated.
 """
 
 from pyspark.sql import SparkSession
+from core.config import Config
 
 
-def build_spark_session(app_name: str, config: dict) -> SparkSession:
+def build_spark_session(app_name: str, config: Config) -> SparkSession:
     """Create a SparkSession configured for the lakehouse Iceberg catalog.
 
     Parameters
     ----------
     app_name : str
         The Spark application name.
-    config : dict
-        Configuration dict returned by ``core.config.load_config()``.
+    config : Config
+        Configuration object returned by ``core.config.load_config()``.
 
     Returns
     -------
     SparkSession
     """
 
-    catalog = config["catalog_name"]
+    catalog = config.catalog_name
 
     return (
         SparkSession.builder
@@ -40,25 +41,25 @@ def build_spark_session(app_name: str, config: dict) -> SparkSession:
         )
         .config(
             f"spark.sql.catalog.{catalog}.uri",
-            config["jdbc_url"],
+            config.jdbc_url,
         )
         .config(
             f"spark.sql.catalog.{catalog}.jdbc.user",
-            config["db_user"],
+            config.db_user,
         )
         .config(
             f"spark.sql.catalog.{catalog}.jdbc.password",
-            config["db_password"],
+            config.db_password,
         )
         .config(
             f"spark.sql.catalog.{catalog}.warehouse",
-            config["warehouse_path"],
+            config.warehouse_path,
         )
 
         # --- S3A / MinIO -----------------------------------------------------
-        .config("spark.hadoop.fs.s3a.endpoint",          config["lh_endpoint"])
-        .config("spark.hadoop.fs.s3a.access.key",        config["lh_user"])
-        .config("spark.hadoop.fs.s3a.secret.key",        config["lh_password"])
+        .config("spark.hadoop.fs.s3a.endpoint",          config.lh_endpoint)
+        .config("spark.hadoop.fs.s3a.access.key",        config.lh_user)
+        .config("spark.hadoop.fs.s3a.secret.key",        config.lh_password)
         .config("spark.hadoop.fs.s3a.path.style.access", "true")
         .config(
             "spark.hadoop.fs.s3a.impl",
