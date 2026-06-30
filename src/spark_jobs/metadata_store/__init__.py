@@ -4,12 +4,10 @@ from metadata_store.model import (
     AccessPolicy,
     Base,
     ColumnMetadata,
-    DetectionMethodEnum,
-    MaskingFunction,
-    PIICategory,
-    PolicyActionEnum,
+    MaskingFunctionModel,
+    PIICategoryModel,
     Role,
-    SensitivityLevel,
+    SensitivityLevelModel,
     TableMetadata,
 )
 from metadata_store.repository import MetadataRepository

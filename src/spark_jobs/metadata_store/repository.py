@@ -21,10 +21,10 @@ from sqlalchemy.orm import Session
 from metadata_store.model import (
     AccessPolicy,
     ColumnMetadata,
-    MaskingFunction,
-    PIICategory,
+    MaskingFunctionModel,
+    PIICategoryModel,
     Role,
-    SensitivityLevel,
+    SensitivityLevelModel,
     TableMetadata,
 )
 
@@ -136,32 +136,32 @@ class MetadataRepository:
     # lookups (reference / seed tables)
     # ------------------------------------------------------------------ #
 
-    def get_sensitivity_level(self, code: str) -> SensitivityLevel | None:
+    def get_sensitivity_level(self, code: str) -> SensitivityLevelModel | None:
         """Look up a sensitivity level by its code (e.g. ``'HIGH'``)."""
         return (
-            self.session.query(SensitivityLevel)
+            self.session.query(SensitivityLevelModel)
             .filter_by(code=code)
             .first()
         )
 
-    def get_pii_category(self, code: str) -> PIICategory | None:
+    def get_pii_category(self, code: str) -> PIICategoryModel | None:
         """Look up a PII category by its code (e.g. ``'NATIONAL_ID'``)."""
         return (
-            self.session.query(PIICategory)
+            self.session.query(PIICategoryModel)
             .filter_by(code=code)
             .first()
         )
 
-    def get_all_pii_categories(self) -> list[PIICategory]:
+    def get_all_pii_categories(self) -> list[PIICategoryModel]:
         """Return all PII categories (with their regex patterns)."""
-        return self.session.query(PIICategory).all()
+        return self.session.query(PIICategoryModel).all()
 
     def get_masking_function(
         self, function_name: str
-    ) -> MaskingFunction | None:
+    ) -> MaskingFunctionModel | None:
         """Look up a masking function by name (e.g. ``'PARTIAL_MASK'``)."""
         return (
-            self.session.query(MaskingFunction)
+            self.session.query(MaskingFunctionModel)
             .filter_by(function_name=function_name)
             .first()
         )

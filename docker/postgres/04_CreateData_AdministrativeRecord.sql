@@ -1,6 +1,9 @@
-DROP TABLE IF EXISTS clerk_notes_templates CASCADE;
-DROP TABLE IF EXISTS record_statuses CASCADE;
-DROP TABLE IF EXISTS service_types CASCADE;
+-- ============================================================
+-- CLEAN UP
+-- ============================================================
+-- DROP TABLE IF EXISTS clerk_notes_templates CASCADE;
+-- DROP TABLE IF EXISTS record_statuses CASCADE;
+-- DROP TABLE IF EXISTS service_types CASCADE;
 
 -- =========================================================================
 -- TABLE 1: Service Types (Các loại hình dịch vụ hành chính)

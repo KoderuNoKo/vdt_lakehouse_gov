@@ -21,11 +21,11 @@ class HrEmployeeAmbiguousGenerator(TableGenerator):
     """Generates synthetic HR employee records with ambiguous column names.
 
     Column mapping:
-        c01 → employee name
-        c02 → salary (VND)
-        c03 → bank account number
-        c04 → tax code (MST)
-        c05 → emergency phone number
+        c01 -> employee name
+        c02 -> salary (VND)
+        c03 -> bank account number
+        c04 -> tax code (MST)
+        c05 -> emergency phone number
     """
 
     table_name = "hr_employee"

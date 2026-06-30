@@ -56,6 +56,7 @@ CREATE TABLE pii_categories (
     code VARCHAR(50) UNIQUE NOT NULL,
     description TEXT,
     regex_pattern TEXT,
+    column_name_aliases TEXT[],
     default_sensitivity_level_id INTEGER REFERENCES sensitivity_levels(id)
 );
 
@@ -170,48 +171,157 @@ INSERT INTO pii_categories
     code,
     description,
     regex_pattern,
+    column_name_aliases,
     default_sensitivity_level_id
 )
 VALUES
+
 (
     'NATIONAL_ID',
     'Vietnamese citizen identification number',
-    '^[0-9]{12}$',
+    '[0-9]{12}',
+    ARRAY[
+        'cccd',
+        'cmnd',
+        'citizenid',
+        'nationalid',
+        'identitynumber',
+        'personalid'
+    ],
     (SELECT id FROM sensitivity_levels WHERE code='HIGH')
 ),
+
+(
+    'BANK_ACCOUNT',
+    'Bank account number',
+    '[0-9]{8,20}',
+    ARRAY[
+        'bankaccount',
+        'accountnumber',
+        'bankacc',
+        'stk',
+        'sotaikhoan'
+    ],
+    (SELECT id FROM sensitivity_levels WHERE code='HIGH')
+),
+
+(
+    'TAX_CODE',
+    'Vietnamese tax identification number',
+    '[0-9]{10}(-[0-9]{3})?',
+    ARRAY[
+        'taxcode',
+        'taxid',
+        'mst',
+        'masothue'
+    ],
+    (SELECT id FROM sensitivity_levels WHERE code='HIGH')
+),
+
+(
+    'SALARY',
+    'Salary or wage information',
+    NULL,
+    ARRAY[
+        'salary',
+        'wage',
+        'income',
+        'monthlysalary',
+        'annualsalary',
+        'luong',
+        'mucluong'
+    ],
+    (SELECT id FROM sensitivity_levels WHERE code='HIGH')
+),
+
 (
     'PHONE',
     'Vietnamese mobile phone number',
-    '^(03|05|07|08|09)[0-9]{8}$',
+    '(03|05|07|08|09)[0-9]{8}',
+    ARRAY[
+        'phone',
+        'phonenumber',
+        'mobile',
+        'mobilephone',
+        'telephone',
+        'tel',
+        'contactnumber',
+        'sdt',
+        'sodienthoai'
+    ],
     (SELECT id FROM sensitivity_levels WHERE code='MEDIUM')
 ),
+
 (
     'EMAIL',
     'Personal email address',
-    '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
+    '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}',
+    ARRAY[
+        'email',
+        'emailaddress',
+        'mail'
+    ],
     (SELECT id FROM sensitivity_levels WHERE code='MEDIUM')
 ),
-(
-    'ADDRESS',
-    'Residential address',
-    NULL,
-    (SELECT id FROM sensitivity_levels WHERE code='LOW')
-),
+
 (
     'FULL_NAME',
     'Personal full name',
     NULL,
+    ARRAY[
+        'fullname',
+        'name',
+        'customername',
+        'employeename',
+        'citizenname',
+        'personname',
+        'hoten',
+        'hovaten'
+    ],
     (SELECT id FROM sensitivity_levels WHERE code='MEDIUM')
 ),
+
 (
-    'BANK_ACCOUNT',
-    'Bank account number',
-    '^[0-9]{8,20}$',
-    (SELECT id FROM sensitivity_levels WHERE code='HIGH')
+    'ADDRESS',
+    'Residential address',
+    NULL,
+    ARRAY[
+        'address',
+        'homeaddress',
+        'residentialaddress',
+        'location',
+        'diachi'
+    ],
+    (SELECT id FROM sensitivity_levels WHERE code='LOW')
 ),
+
 (
-    'TAX_CODE',
-    'Vietnamese tax identification number',
-    '^[0-9]{10}(-[0-9]{3})?$',
-    (SELECT id FROM sensitivity_levels WHERE code='HIGH')
+    'DATE_OF_BIRTH',
+    'Date of birth',
+    NULL,
+    ARRAY[
+        'dob',
+        'birthdate',
+        'birthday',
+        'dateofbirth',
+        'ngaysinh'
+    ],
+    (SELECT id FROM sensitivity_levels WHERE code='LOW')
+),
+
+(
+    'WORKPLACE',
+    'Workplace or employer',
+    NULL,
+    ARRAY[
+        'workplace',
+        'company',
+        'companyname',
+        'organization',
+        'organizationname',
+        'employer',
+        'office',
+        'worklocation'
+    ],
+    (SELECT id FROM sensitivity_levels WHERE code='LOW')
 );

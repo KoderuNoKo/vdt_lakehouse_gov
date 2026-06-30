@@ -1,5 +1,8 @@
-DROP TABLE IF EXISTS hr_remarks_templates CASCADE;
-DROP TABLE IF EXISTS departments CASCADE;
+-- ============================================================
+-- CLEAN UP
+-- ============================================================
+-- DROP TABLE IF EXISTS hr_remarks_templates CASCADE;
+-- DROP TABLE IF EXISTS departments CASCADE;
 
 -- =========================================================================
 -- TABLE: Departments (Phòng ban)

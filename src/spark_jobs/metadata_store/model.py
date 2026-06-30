@@ -8,8 +8,6 @@ init script and must remain the single source of truth.
 **Do not call** ``Base.metadata.create_all()`` in production code.
 """
 
-import enum
-
 from sqlalchemy import (
     Boolean,
     Column,
@@ -21,8 +19,13 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP
+from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY, JSONB, TIMESTAMP
 from sqlalchemy.orm import DeclarativeBase, relationship
+
+from core.enums import (
+    DetectionMethod,
+    PolicyAction,
+)
 
 
 # ============================================================
@@ -37,35 +40,23 @@ class Base(DeclarativeBase):
 
 
 # ============================================================
-# PostgreSQL ENUMs
+# PostgreSQL ENUMs (SQLAlchemy column-type bindings)
 # ============================================================
 # The types already exist in the database (created by the DDL script),
 # so we set ``create_type=False`` to prevent SQLAlchemy from attempting
 # to issue ``CREATE TYPE`` statements.
-
-class DetectionMethodEnum(enum.Enum):
-    REGEX = "REGEX"
-    LLM = "LLM"
-    HYBRID = "HYBRID"
-    MANUAL = "MANUAL"
-    UNKNOWN = "UNKNOWN"
-
-
-class PolicyActionEnum(enum.Enum):
-    ALLOW = "ALLOW"
-    MASK = "MASK"
-    DENY = "DENY"
-
+#
+# The Python enum classes themselves live in ``core.enums``.
 
 detection_method_type = Enum(
-    DetectionMethodEnum,
+    DetectionMethod,
     name="detection_method_enum",
     schema=SCHEMA,
     create_type=False,
 )
 
 policy_action_type = Enum(
-    PolicyActionEnum,
+    PolicyAction,
     name="policy_action_enum",
     schema=SCHEMA,
     create_type=False,
@@ -76,7 +67,7 @@ policy_action_type = Enum(
 # Reference / Lookup Tables
 # ============================================================
 
-class SensitivityLevel(Base):
+class SensitivityLevelModel(Base):
     """``ib_metadata.sensitivity_levels`` — HIGH / MEDIUM / LOW / NONE."""
 
     __tablename__ = "sensitivity_levels"
@@ -87,7 +78,7 @@ class SensitivityLevel(Base):
     description = Column(Text)
 
 
-class PIICategory(Base):
+class PIICategoryModel(Base):
     """``ib_metadata.pii_categories`` — NATIONAL_ID, PHONE, EMAIL, …"""
 
     __tablename__ = "pii_categories"
@@ -97,6 +88,7 @@ class PIICategory(Base):
     code = Column(String(50), unique=True, nullable=False)
     description = Column(Text)
     regex_pattern = Column(Text)
+    column_name_aliases = Column(PG_ARRAY(Text))
     default_sensitivity_level_id = Column(
         Integer,
         ForeignKey(f"{SCHEMA}.sensitivity_levels.id"),
@@ -104,7 +96,7 @@ class PIICategory(Base):
 
     # relationships
     default_sensitivity_level = relationship(
-        "SensitivityLevel", foreign_keys=[default_sensitivity_level_id]
+        "SensitivityLevelModel", foreign_keys=[default_sensitivity_level_id]
     )
 
 
@@ -119,7 +111,7 @@ class Role(Base):
     description = Column(Text)
 
 
-class MaskingFunction(Base):
+class MaskingFunctionModel(Base):
     """``ib_metadata.masking_functions`` — PARTIAL_MASK, HASH_MASK, …"""
 
     __tablename__ = "masking_functions"
@@ -189,9 +181,9 @@ class ColumnMetadata(Base):
 
     # relationships
     table = relationship("TableMetadata", back_populates="columns")
-    pii_category = relationship("PIICategory", foreign_keys=[pii_category_id])
+    pii_category = relationship("PIICategoryModel", foreign_keys=[pii_category_id])
     sensitivity_level = relationship(
-        "SensitivityLevel", foreign_keys=[sensitivity_level_id]
+        "SensitivityLevelModel", foreign_keys=[sensitivity_level_id]
     )
 
 
@@ -200,7 +192,7 @@ class ColumnMetadata(Base):
 # ============================================================
 
 class AccessPolicy(Base):
-    """``ib_metadata.access_policies`` — maps (role, sensitivity) → action."""
+    """``ib_metadata.access_policies`` — maps (role, sensitivity) -> action."""
 
     __tablename__ = "access_policies"
     __table_args__ = (
@@ -229,8 +221,8 @@ class AccessPolicy(Base):
     # relationships
     role = relationship("Role", foreign_keys=[role_id])
     sensitivity_level = relationship(
-        "SensitivityLevel", foreign_keys=[sensitivity_level_id]
+        "SensitivityLevelModel", foreign_keys=[sensitivity_level_id]
     )
     masking_function = relationship(
-        "MaskingFunction", foreign_keys=[masking_function_id]
+        "MaskingFunctionModel", foreign_keys=[masking_function_id]
     )

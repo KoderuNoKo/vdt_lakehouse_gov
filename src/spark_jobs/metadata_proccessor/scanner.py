@@ -73,7 +73,7 @@ class DataSampler:
     ) -> dict[str, list]:
         """Collect sample values for every column (or a subset) of a table.
 
-        Returns a dict mapping ``column_name → [sample_values]``.
+        Returns a dict mapping ``column_name -> [sample_values]``.
         """
         df = self.catalog.load_table(namespace, table_name)
 

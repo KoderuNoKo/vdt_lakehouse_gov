@@ -1,5 +1,8 @@
-DROP TABLE IF EXISTS tx_types CASCADE;
-DROP TABLE IF EXISTS tx_message_templates CASCADE;
+-- ============================================================
+-- CLEAN UP
+-- ============================================================
+-- DROP TABLE IF EXISTS tx_types CASCADE;
+-- DROP TABLE IF EXISTS tx_message_templates CASCADE;
 
 -- =========================================================================
 -- TABLE: Transaction Types (Loại giao dịch)
