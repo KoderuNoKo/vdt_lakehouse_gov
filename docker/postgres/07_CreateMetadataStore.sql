@@ -341,3 +341,29 @@ VALUES
     ],
     (SELECT id FROM sensitivity_levels WHERE code='LOW')
 );
+
+INSERT INTO access_policies (role_id, sensitivity_level_id, action, masking_function_id)
+VALUES
+    -- ROLE: ADMIN. Full access to all data.
+    ((SELECT id FROM roles WHERE role_name = 'ADMIN'), (SELECT id FROM sensitivity_levels WHERE code = 'HIGH'), 'ALLOW', NULL),
+    ((SELECT id FROM roles WHERE role_name = 'ADMIN'), (SELECT id FROM sensitivity_levels WHERE code = 'MEDIUM'), 'ALLOW', NULL),
+    ((SELECT id FROM roles WHERE role_name = 'ADMIN'), (SELECT id FROM sensitivity_levels WHERE code = 'LOW'), 'ALLOW', NULL),
+    ((SELECT id FROM roles WHERE role_name = 'ADMIN'), (SELECT id FROM sensitivity_levels WHERE code = 'NONE'), 'ALLOW', NULL),
+
+    -- ROLE: ANALYST. Can see non-sensitive data, but sensitive data is dynamically masked to preserve analytical utility.
+    -- HIGH (e.g., CCCD, Bank Account): Hash masking to allow JOINs and aggregations without exposing raw PII.
+    ((SELECT id FROM roles WHERE role_name = 'ANALYST'), (SELECT id FROM sensitivity_levels WHERE code = 'HIGH'), 'MASK', (SELECT id FROM masking_functions WHERE function_name = 'HASH_MASK')),
+    -- MEDIUM (e.g., Phone, Email, Name): Partial masking (e.g., ***@email.com, 098****321).
+    ((SELECT id FROM roles WHERE role_name = 'ANALYST'), (SELECT id FROM sensitivity_levels WHERE code = 'MEDIUM'), 'MASK', (SELECT id FROM masking_functions WHERE function_name = 'PARTIAL_MASK')),
+    -- LOW / NONE: Full access (e.g., general addresses, dates).
+    ((SELECT id FROM roles WHERE role_name = 'ANALYST'), (SELECT id FROM sensitivity_levels WHERE code = 'LOW'), 'ALLOW', NULL),
+    ((SELECT id FROM roles WHERE role_name = 'ANALYST'), (SELECT id FROM sensitivity_levels WHERE code = 'NONE'), 'ALLOW', NULL),
+
+    -- ROLE: AUDITOR. Strict compliance. Redacts any PII.
+    -- HIGH & MEDIUM: Completely redacted ([REDACTED]).
+    ((SELECT id FROM roles WHERE role_name = 'AUDITOR'), (SELECT id FROM sensitivity_levels WHERE code = 'HIGH'), 'MASK', (SELECT id FROM masking_functions WHERE function_name = 'REDACT')),
+    ((SELECT id FROM roles WHERE role_name = 'AUDITOR'), (SELECT id FROM sensitivity_levels WHERE code = 'MEDIUM'), 'MASK', (SELECT id FROM masking_functions WHERE function_name = 'REDACT')),
+    
+    -- LOW / NONE: Full access to review non-sensitive operational data.
+    ((SELECT id FROM roles WHERE role_name = 'AUDITOR'), (SELECT id FROM sensitivity_levels WHERE code = 'LOW'), 'ALLOW', NULL),
+    ((SELECT id FROM roles WHERE role_name = 'AUDITOR'), (SELECT id FROM sensitivity_levels WHERE code = 'NONE'), 'ALLOW', NULL);

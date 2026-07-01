@@ -57,6 +57,26 @@ services:
       - ./src/spark_jobs:/opt/spark/jobs
       - ./data:/opt/spark/data/csv
 
+  # zeppelin:
+  #   image: apache/zeppelin:0.11.2
+  #   container_name: zeppelin
+
+  #   depends_on:
+  #     - spark-master
+  #     - postgres
+  #     - minio
+
+  #   ports:
+  #     - "8085:8080"
+
+  #   environment:
+  #     MASTER: spark://spark-master:7077
+
+  #   volumes:
+  #     - ./docker/zeppelin/notebook:/zeppelin/notebook
+  #     - ./docker/zeppelin/conf:/zeppelin/conf
+  #     - ./src:/workspace/src
+
 volumes:
   pg-data:
   minio-data:

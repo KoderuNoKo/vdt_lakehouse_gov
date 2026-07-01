@@ -92,6 +92,15 @@ class MetadataRepository:
             .all()
         )
 
+    def get_columns_by_table_name(
+        self, namespace: str, table_name: str
+    ) -> list[ColumnMetadata]:
+        """Return all columns for a table identified by namespace + table_name."""
+        table = self.get_table_metadata(namespace, table_name)
+        if table is None:
+            raise ValueError(f"Table '{namespace}.{table_name}' not in metadata store")
+        return self.get_columns_by_table(table.id)
+
     def get_unscanned_columns(self, table_id: int) -> list[ColumnMetadata]:
         """Get columns that have not yet been scanned for PII."""
         return (
@@ -191,4 +200,15 @@ class MetadataRepository:
             self.session.query(Role)
             .filter_by(role_name=role_name)
             .first()
+        )
+
+    def get_policies_for_role(self, role_name: str) -> list[AccessPolicy]:
+        """Return all access policies for a given role name."""
+        role = self.get_role(role_name)
+        if role is None:
+            raise ValueError(f"Role '{role_name}' not found")
+        return (
+            self.session.query(AccessPolicy)
+            .filter_by(role_id=role.id)
+            .all()
         )
